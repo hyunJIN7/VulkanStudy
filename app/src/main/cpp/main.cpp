@@ -6,6 +6,7 @@
 #include <vulkan/vulkan.h>
 
 #include "AndroidOut.h"
+#include "VulkanRenderer.h"
 
 extern "C" {
 
@@ -32,6 +33,8 @@ bool motion_event_filter_func(const GameActivityMotionEvent *motionEvent) {
 
 void android_main(struct android_app *pApp) {
     aout << "Welcome to android_main" << std::endl;
+
+    VKRenderer vkRenderer;
 
     pApp->onAppCmd = handle_cmd;
     android_app_set_motion_event_filter(pApp, motion_event_filter_func);

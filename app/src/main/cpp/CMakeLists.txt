@@ -10,6 +10,7 @@ project("vulkanstudy")
 add_library(vulkanstudy SHARED
         main.cpp
         AndroidOut.cpp
+        VulkanRenderer.cpp
 )
 
 # Searches for a package provided by the game activity dependency
