@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <iomanip>
 #include <string_view>
+#include <cassert>
 #include "VulkanRenderer.h"
 
 using namespace std;
@@ -31,13 +32,31 @@ VKRenderer::VKRenderer() {
         instanceLayerNames.push_back(layerProperty.layerName);
     }
 
-    VkInstanceCreateInfo instanceCreateInfo{
-        .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-        .pApplicationInfo = &applicationInfo,
-        .enabledLayerCount = static_cast<uint32_t>(instanceLayerNames.size()),
-        .ppEnabledLayerNames = instanceLayerNames.data()
-    };
+    // 사용 가능한 Vulkan Instance Extension 얻기
+    uint32_t instanceExtensionCount;
+    VK_CHECK_ERROR(vkEnumerateInstanceExtensionProperties(
+            nullptr, &instanceExtensionCount, nullptr));
+    vector<VkExtensionProperties> instanceExtensionProperties(instanceExtensionCount);
+    VK_CHECK_ERROR(vkEnumerateInstanceExtensionProperties(
+            nullptr, &instanceExtensionCount, instanceExtensionProperties.data()));
 
+    vector<const char *> instanceExtensionNames;
+    for (const auto &properties: instanceExtensionProperties) {
+        if (properties.extensionName == string("VK_KHR_surface") ||
+            properties.extensionName == string("VK_KHR_android_surface")) {
+            instanceExtensionNames.push_back(properties.extensionName);
+        }
+    }
+    assert(instanceExtensionNames.size() == 2);
+
+    VkInstanceCreateInfo instanceCreateInfo{
+            .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+            .pApplicationInfo = &applicationInfo,
+            .enabledLayerCount = static_cast<uint32_t>(instanceLayerNames.size()),
+            .ppEnabledLayerNames = instanceLayerNames.data(),
+            .enabledExtensionCount = static_cast<uint32_t>(instanceExtensionNames.size()),
+            .ppEnabledExtensionNames = instanceExtensionNames.data()
+    };
     VK_CHECK_ERROR(vkCreateInstance(&instanceCreateInfo, nullptr, &mInstance));
 
     // ====================================================
@@ -85,11 +104,29 @@ VKRenderer::VKRenderer() {
             .pQueuePriorities = queuePriorities.data()
     };
 
+    // 사용 가능한 Vulkan Device Extension 얻기
+    uint32_t deviceExtensionCount;
+    VK_CHECK_ERROR(vkEnumerateDeviceExtensionProperties(mPhysicalDevice,
+                                                        nullptr, &deviceExtensionCount, nullptr));
+    vector<VkExtensionProperties> deviceExtensionProperties(deviceExtensionCount);
+    VK_CHECK_ERROR(vkEnumerateDeviceExtensionProperties(mPhysicalDevice,
+                                                        nullptr, &deviceExtensionCount, deviceExtensionProperties.data()));
+    // 화면 출력을 위한 vulkan device extension 선택
+    vector<const char *> deviceExtensionNames;
+    for (const auto &properties: deviceExtensionProperties) {
+        if (properties.extensionName == string("VK_KHR_swapchain")) {
+            deviceExtensionNames.push_back(properties.extensionName);
+        }
+    }
+    assert(deviceExtensionNames.size() == 1);
+
     // vulkan device 정의 후 생성
     VkDeviceCreateInfo deviceCreateInfo{
             .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
             .queueCreateInfoCount = 1,
             .pQueueCreateInfos = &deviceQueueCreateInfo,
+            .enabledExtensionCount = static_cast<uint32_t>(deviceExtensionNames.size()),
+            .ppEnabledExtensionNames = deviceExtensionNames.data()
     };
 
     VK_CHECK_ERROR(vkCreateDevice(mPhysicalDevice, &deviceCreateInfo, nullptr, &mDevice));
