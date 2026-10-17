@@ -5,20 +5,20 @@ cmake_minimum_required(VERSION 3.22.1)
 
 project("vulkanstudy")
 
-# Creates your game shared library. The name must be the same as the
-# one used for loading in your Kotlin/Java or AndroidManifest.txt files.
+find_package(game-activity REQUIRED CONFIG)
+find_package(Vulkan REQUIRED)
+
 add_library(vulkanstudy SHARED
         main.cpp
         AndroidOut.cpp
         VulkanRenderer.cpp
 )
 
-# Searches for a package provided by the game activity dependency
-find_package(game-activity REQUIRED CONFIG)
-find_package(Vulkan REQUIRED)
-# Forces the linker to keep the JNI entry point for GameActivity
 set(CMAKE_SHARED_LINKER_FLAGS
         "${CMAKE_SHARED_LINKER_FLAGS} -u Java_com_google_androidgamesdk_GameActivity_initializeNativeCode")
+
+target_compile_definitions(vulkanstudy PRIVATE
+        VK_USE_PLATFORM_ANDROID_KHR)
 
 # Configure libraries CMake uses to link your target library.
 target_link_libraries(vulkanstudy

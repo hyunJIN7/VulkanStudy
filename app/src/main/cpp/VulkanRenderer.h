@@ -2,6 +2,7 @@
 #define VULKANSTUDY_VULKANRENDERER_H
 
 #pragma once
+#include <android/native_window.h>
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <cstdlib>
@@ -20,13 +21,16 @@
 class VKRenderer
 {
 public:
-    VKRenderer();
+    explicit VKRenderer(ANativeWindow* window);
     ~VKRenderer();
+
+private:
     VkInstance mInstance = VK_NULL_HANDLE;
-    VkPhysicalDevice mPhysicalDevice;
+    VkPhysicalDevice mPhysicalDevice = VK_NULL_HANDLE;
+    VkDevice mDevice = VK_NULL_HANDLE;
+    VkQueue mQueue = VK_NULL_HANDLE;
     uint32_t mQueueFamilyIndex = 0;
-    VkDevice mDevice;
-    VkQueue mQueue;
+    VkSurfaceKHR mSurface = VK_NULL_HANDLE;
 };
 
 #endif //VULKANSTUDY_VULKANRENDERER_H

@@ -4,9 +4,12 @@
 #include <cassert>
 #include "VulkanRenderer.h"
 
+//#define VK_USE_PLATFORM_ANDROID_KHR
+//#include <vulkan/vulkan.h>
+
 using namespace std;
 
-VKRenderer::VKRenderer() {
+VKRenderer::VKRenderer(ANativeWindow *window) {
     // ====================================================
     // 1. VkInstance 생성
     // ====================================================
@@ -134,10 +137,30 @@ VKRenderer::VKRenderer() {
     // vulkan queue 얻기
     vkGetDeviceQueue(mDevice, mQueueFamilyIndex, 0, &mQueue);
 
+    // ====================================================
+    // 4. VkSurface 생성
+    // ====================================================
+    VkAndroidSurfaceCreateInfoKHR surfaceCreateInfo{
+            .sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR,
+            .window = window
+    };
+    VK_CHECK_ERROR(vkCreateAndroidSurfaceKHR(mInstance,
+                                             &surfaceCreateInfo,
+                                             nullptr,
+                                             &mSurface));
+
+    // Vulkan Physical Device가 Vulkan Surface를 지원하는지 확인
+    VkBool32 supported;
+    VK_CHECK_ERROR(vkGetPhysicalDeviceSurfaceSupportKHR(mPhysicalDevice,
+                                                        mQueueFamilyIndex,
+                                                        mSurface,
+                                                        &supported));
+    assert(supported);
 }
 
 VKRenderer::~VKRenderer() {
     vkDestroyInstance(mInstance, nullptr);
     vkDestroyDevice(mDevice, nullptr);
+    vkDestroySurfaceKHR(mInstance, mSurface, nullptr);
 }
 
