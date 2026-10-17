@@ -23,6 +23,7 @@ public:
     VKRenderer();
     ~VKRenderer();
     VkInstance mInstance = VK_NULL_HANDLE;
+    VkPhysicalDevice mPhysicalDevice;
 };
 
 #endif //VULKANSTUDY_VULKANRENDERER_H
