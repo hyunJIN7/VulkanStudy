@@ -24,6 +24,9 @@ public:
     ~VKRenderer();
     VkInstance mInstance = VK_NULL_HANDLE;
     VkPhysicalDevice mPhysicalDevice;
+    uint32_t mQueueFamilyIndex = 0;
+    VkDevice mDevice;
+    VkQueue mQueue;
 };
 
 #endif //VULKANSTUDY_VULKANRENDERER_H

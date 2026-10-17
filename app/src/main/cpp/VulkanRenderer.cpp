@@ -52,15 +52,55 @@ VKRenderer::VKRenderer() {
     // 간단한 예제를 위해 첫번째 사용
     mPhysicalDevice = physicalDevices[0];
 
+    // gpu 모든 정보 있다고 함
     VkPhysicalDeviceProperties physicalDeviceProperties;
     vkGetPhysicalDeviceProperties(mPhysicalDevice, &physicalDeviceProperties);
 
     aout << "Selected Physical Device Info" << endl;
     aout << setw(16) << left << " - Device Name : " << string_view(physicalDeviceProperties.deviceName) << endl;
 
+    // ====================================================
+    // 3. VkDevice 생성
+    // ====================================================
+    uint32_t queueFamilyPropertiesCount;
+    vkGetPhysicalDeviceQueueFamilyProperties(mPhysicalDevice,
+                                             &queueFamilyPropertiesCount, nullptr);
+    vector<VkQueueFamilyProperties> queueFamilyProperties(queueFamilyPropertiesCount); // 해당 queue family 속성 얻어오기
+    vkGetPhysicalDeviceQueueFamilyProperties(mPhysicalDevice,
+                                             &queueFamilyPropertiesCount,
+                                             queueFamilyProperties.data());
+
+    // 특정 Queue Family가 Graphics bit 지원하는지 확인
+    for (mQueueFamilyIndex = 0; mQueueFamilyIndex != queueFamilyPropertiesCount; ++mQueueFamilyIndex) {
+        if (queueFamilyProperties[mQueueFamilyIndex].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+            break;
+        }
+    }
+
+    const vector<float> queuePriorities{1.0};
+    VkDeviceQueueCreateInfo deviceQueueCreateInfo{
+            .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+            .queueFamilyIndex = mQueueFamilyIndex,
+            .queueCount = 1,
+            .pQueuePriorities = queuePriorities.data()
+    };
+
+    // vulkan device 정의 후 생성
+    VkDeviceCreateInfo deviceCreateInfo{
+            .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+            .queueCreateInfoCount = 1,
+            .pQueueCreateInfos = &deviceQueueCreateInfo,
+    };
+
+    VK_CHECK_ERROR(vkCreateDevice(mPhysicalDevice, &deviceCreateInfo, nullptr, &mDevice));
+
+    // vulkan queue 얻기
+    vkGetDeviceQueue(mDevice, mQueueFamilyIndex, 0, &mQueue);
+
 }
 
 VKRenderer::~VKRenderer() {
     vkDestroyInstance(mInstance, nullptr);
+    vkDestroyDevice(mDevice, nullptr);
 }
 
